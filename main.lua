@@ -2962,21 +2962,26 @@ KickTab:AddToggle({
                     L_Weld = L_Det and (L_Det:FindFirstChild("LeftWeld") or L_Det:FindFirstChildWhichIsA("Weld"))
                 end
                 
-                tChar = currentTarget.Character
-                tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
-                local tHum = tChar and tChar:FindFirstChild("Humanoid")
-                
-                if tHum and tHum.Health <= 0 then
-                    if not alreadyKilled[targetName] then
-                        alreadyKilled[targetName] = true
-                        OrionLib:MakeNotification({
-                            Name = "💀 ターゲットが死亡しました",
-                            Content = "",
-                            Time = 2
-                        })
-                    end
-                    continue
-                end
+tChar = currentTarget.Character
+tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+local tHum = tChar and tChar:FindFirstChild("Humanoid")
+
+if not tChar or not tRoot or not tHum then
+    task.wait(0.1)
+    continue
+end
+
+if tHum and tHum.Health <= 0 then
+    if not alreadyKilled[targetName] then
+        alreadyKilled[targetName] = true
+        OrionLib:MakeNotification({
+            Name = "💀 ターゲットが死亡しました",
+            Content = "",
+            Time = 2
+        })
+    end
+    continue
+end
                 
                 if tRoot and tHum and tHum.Health > 0 then
                     local lockPos = SavedPos * CFrame.new(0, 10, 0)
