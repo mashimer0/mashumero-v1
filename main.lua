@@ -2975,7 +2975,7 @@ KickTab:AddToggle({
                             Time = 2
                         })
                     end
-                    break
+                    continue
                 end
                 
                 if tRoot and tHum and tHum.Health > 0 then
