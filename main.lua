@@ -172,7 +172,7 @@ local function createBloodMoon()
     stars.Parent = starContainer
     print("🌕 ブラッドムーンエフェクト適用")
 end
-task.spawn(createBloodMoon)
+
 
 loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 
@@ -2998,7 +2998,7 @@ end
                     blobRoot.CFrame = lookAtCFrame
                     blobRoot.Velocity = Vector3.zero
                     
-                    if tick() - packetTimer > 0.01 then  -- ★★★ 爆速！0.00005 ★★★
+                    if tick() - packetTimer > 0.01 then  -- ★★★ 爆速！0.000000005 ★★★
                         packetTimer = tick()
                         
                         -- ★★★ 両手交互掴み ★★★
