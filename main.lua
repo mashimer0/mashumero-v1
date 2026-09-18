@@ -2362,7 +2362,28 @@ local function startLineLag()
             if spawnLocation then
                 local randomX = math.random(-1e9,1e9)
                 local randomZ = math.random(-1e9,1e9)
-                local directions = {CFrame.new(randomX,0,randomZ), CFrame.new(-randomX,0,-randomZ), CFrame.new(randomX,0,-randomZ), CFrame.new(-randomX,0,randomZ)}
+                local directions = {
+    CFrame.new(randomX, 0, randomZ),
+    CFrame.new(-randomX, 0, -randomZ),
+    CFrame.new(randomX, 0, -randomZ),
+    CFrame.new(-randomX, 0, randomZ),
+    CFrame.new(randomX * 2, 0, randomZ * 2),
+    CFrame.new(-randomX * 2, 0, -randomZ * 2),
+    CFrame.new(randomX * 2, 0, -randomZ * 2),
+    CFrame.new(-randomX * 2, 0, randomZ * 2),
+    CFrame.new(randomX * 3, 0, randomZ * 3),
+    CFrame.new(-randomX * 3, 0, -randomZ * 3),
+    CFrame.new(randomX * 3, 0, -randomZ * 3),
+    CFrame.new(-randomX * 3, 0, randomZ * 3),
+    CFrame.new(randomX * 4, 0, randomZ * 4),
+    CFrame.new(-randomX * 4, 0, -randomZ * 4),
+    CFrame.new(randomX * 4, 0, -randomZ * 4),
+    CFrame.new(-randomX * 4, 0, randomZ * 4),
+    CFrame.new(randomX * 5, 0, randomZ * 5),
+    CFrame.new(-randomX * 5, 0, -randomZ * 5),
+    CFrame.new(randomX * 5, 0, -randomZ * 5),
+    CFrame.new(-randomX * 5, 0, randomZ * 5)
+}
                 for _, pos in pairs(directions) do
                     pcall(function() createLine:FireServer(spawnLocation, pos) end)
                 end
