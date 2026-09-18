@@ -3021,13 +3021,7 @@ end
                     
                     if tick() - packetTimer > 0.01 then  -- ★★★ 爆速！ 0.00005 ★★★
                         packetTimer = tick()
--- ラグ用パケット送信
-local GrabEvent = ReplicatedStorage:FindFirstChild("GrabEvents")
-if GrabEvent and GrabEvent:FindFirstChild("ExtendGrabLine") then
-    for i = 1, 5 do
-        GrabEvent.ExtendGrabLine:FireServer("Balls Balls Balls")
-    end
-end                      
+                      
                         -- ★★★ 両手交互掴み ★★★
                         handSwitch = (handSwitch + 1) % 3
                         
