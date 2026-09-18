@@ -2936,7 +2936,7 @@ KickTab:AddToggle({
                         alreadyKicked[targetName] = true
                         OrionLib:MakeNotification({
                             Name = "🎯 キック完了！",
-                            Content = targetName .. " を強制退去させました！",
+                            Content = targetName .. " をキックしました！",
                             Time = 3
                         })
                     end
@@ -2998,7 +2998,7 @@ end
                     blobRoot.CFrame = lookAtCFrame
                     blobRoot.Velocity = Vector3.zero
                     
-                    if tick() - packetTimer > 0.01 then  -- ★★★ 爆速！0.005 ★★★
+                    if tick() - packetTimer > 0.01 then  -- ★★★ 爆速！0.00005 ★★★
                         packetTimer = tick()
                         
                         -- ★★★ 両手交互掴み ★★★
