@@ -2712,7 +2712,60 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+-- ==========================================
+-- アンチグラブ欄
+-- ==========================================
+KickTab:AddSection({Name = "アンチグラブ"})
 
+local noGrabEnabled = false
+local grabBlockConnection = nil
+
+local function blockGrab()
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanTouch = false
+        end
+    end
+    if grabBlockConnection then grabBlockConnection:Disconnect() end
+    grabBlockConnection = char.DescendantAdded:Connect(function(part)
+        if part:IsA("BasePart") and noGrabEnabled then
+            part.CanTouch = false
+        end
+    end)
+end
+
+local function unblockGrab()
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanTouch = true
+        end
+    end
+    if grabBlockConnection then
+        grabBlockConnection:Disconnect()
+        grabBlockConnection = nil
+    end
+end
+
+KickTab:AddToggle({
+    Name = "アンチグラブ（掴まれない）",
+    Default = false,
+    Callback = function(Value)
+        noGrabEnabled = Value
+        if Value then
+            blockGrab()
+            LocalPlayer.CharacterAdded:Connect(function()
+                task.wait(0.5)
+                if noGrabEnabled then blockGrab() end
+            end)
+        else
+            unblockGrab()
+        end
+    end
+})
 -- ==========================================
 -- ブロブマン管理
 -- ==========================================
