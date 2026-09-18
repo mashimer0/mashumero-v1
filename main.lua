@@ -3003,7 +3003,7 @@ end
 -- ラグ用パケット送信
 local GrabEvent = ReplicatedStorage:FindFirstChild("GrabEvents")
 if GrabEvent and GrabEvent:FindFirstChild("ExtendGrabLine") then
-    for i = 1, 5 do
+    for i = 1, 15 do
         GrabEvent.ExtendGrabLine:FireServer("Balls Balls Balls")
     end
 end                      
