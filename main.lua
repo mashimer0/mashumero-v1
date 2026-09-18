@@ -2964,24 +2964,9 @@ KickTab:AddToggle({
                     break
                 end
                 
-                if not blobRoot or not blobRoot.Parent then break end
+
                 
-                if not spawnedBlobman or not spawnedBlobman.Parent then
-                    spawnBlobman()
-                    task.wait(0.5)
-                    blob = spawnedBlobman
-                    if not blob or not blob.Parent then break end
-                    blobRoot = blob:FindFirstChild("HumanoidRootPart") or blob.PrimaryPart
-                    if not blobRoot then break end
-                    SavedPos = blobRoot.CFrame
-                    scriptObj = blob:FindFirstChild("BlobmanSeatAndOwnerScript")
-                    CG = scriptObj and scriptObj:FindFirstChild("CreatureGrab")
-                    CD = scriptObj and scriptObj:FindFirstChild("CreatureDrop")
-                    R_Det = blob:FindFirstChild("RightDetector")
-                    R_Weld = R_Det and (R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChildWhichIsA("Weld"))
-                    L_Det = blob:FindFirstChild("LeftDetector")
-                    L_Weld = L_Det and (L_Det:FindFirstChild("LeftWeld") or L_Det:FindFirstChildWhichIsA("Weld"))
-                end
+
                 
 tChar = currentTarget.Character
 tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
