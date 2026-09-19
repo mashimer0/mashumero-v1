@@ -3174,9 +3174,10 @@ local DefenseTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local CE = ReplicatedStorage:FindFirstChild("CharacterEvents")
-local StruggleEvent = CE and CE:FindFirstChild("Struggle")
-local BeingHeld = Player:WaitForChild("IsHeld", 10)
+-- 変数（ましゅめろキック内の既存変数をそのまま使用）
+local _CE = ReplicatedStorage:FindFirstChild("CharacterEvents")
+local _StruggleEvent = _CE and _CE:FindFirstChild("Struggle")
+local _BeingHeld = LocalPlayer:WaitForChild("IsHeld", 10)
 
 -- アンチグラブ
 local AntiGrab = false
@@ -3213,13 +3214,13 @@ local function ApplyAntiGrab(char)
             if not AntiGrabProc then
                 AntiGrabProc = true
                 hum.Sit = false
-                if StruggleEvent then StruggleEvent:FireServer(Player) end
+                if _StruggleEvent then _StruggleEvent:FireServer(LocalPlayer) end
                 
                 task.spawn(function() 
-                    while (head and head:FindFirstChild("PartOwner")) or (BeingHeld and BeingHeld.Value) do
-                        if StruggleEvent then StruggleEvent:FireServer(Player) end
-                        if CE and CE:FindFirstChild("RagdollRemote") then
-                            CE.RagdollRemote:FireServer(hrp, 0)
+                    while (head and head:FindFirstChild("PartOwner")) or (_BeingHeld and _BeingHeld.Value) do
+                        if _StruggleEvent then _StruggleEvent:FireServer(LocalPlayer) end
+                        if _CE and _CE:FindFirstChild("RagdollRemote") then
+                            _CE.RagdollRemote:FireServer(hrp, 0)
                         end
                         task.wait()
                     end
@@ -3228,7 +3229,7 @@ local function ApplyAntiGrab(char)
                 hrp.Anchored = true
                 if not AGWalk then
                     AGWalk = true
-                    while BeingHeld and BeingHeld.Value and task.wait() do
+                    while _BeingHeld and _BeingHeld.Value and task.wait() do
                         hrp.CFrame = hrp.CFrame + hum.MoveDirection * 0.43
                     end
                 end
@@ -3280,10 +3281,10 @@ DefenseTab:AddToggle({
         AGDiscAll()
         
         if AntiGrab then
-            ApplyAntiGrab(Player.Character)
-            AGCons["AGChar"] = Player.CharacterAdded:Connect(ApplyAntiGrab)
+            ApplyAntiGrab(LocalPlayer.Character)
+            AGCons["AGChar"] = LocalPlayer.CharacterAdded:Connect(ApplyAntiGrab)
         else
-            local char = Player.Character
+            local char = LocalPlayer.Character
             if char then
                 for _, v in pairs(char:GetChildren()) do
                     if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
