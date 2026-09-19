@@ -3165,7 +3165,342 @@ local TriggerTab = Window:MakeTab({
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
+-- ==========================================
+-- ディフェンスタブ（4機能）
+-- ==========================================
+local DefenseTab = Window:MakeTab({
+    Name = "ディフェンス",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
+local DefenseMain = DefenseTab:AddLeftGroupbox("🛡️ メイン防御")
+local DefenseExtra = DefenseTab:AddRightGroupbox("🔧 追加防御")
+
+local GE = ReplicatedStorage:FindFirstChild("GrabEvents")
+local CE = ReplicatedStorage:FindFirstChild("CharacterEvents")
+local StruggleEvent = CE and CE:FindFirstChild("Struggle")
+
+-- ① アンチグラブ
+local AntiGrab = false
+local AntiGrabCons = {}
+
+DefenseMain:AddToggle("AntiGrabToggle", {
+    Text = "アンチグラブ",
+    Default = false,
+    Callback = function(Value)
+        AntiGrab = Value
+        for _, v in pairs(AntiGrabCons) do if v then v:Disconnect() end end
+        table.clear(AntiGrabCons)
+        
+        if AntiGrab then
+            local function ApplyAntiGrab(char)
+                if not char or not AntiGrab then return end
+                local head = char:WaitForChild("Head", 5)
+                local hum = char:WaitForChild("Humanoid", 5)
+                local hrp = char:WaitForChild("HumanoidRootPart", 5)
+                if not (head and hum and hrp) then return end
+                
+                AntiGrabCons["head"] = head.ChildAdded:Connect(function(PartOwner)
+                    if PartOwner.Name == "PartOwner" then
+                        pcall(function()
+                            hum.Sit = false
+                            if StruggleEvent then StruggleEvent:FireServer(Player) end
+                            task.spawn(function()
+                                while head and head:FindFirstChild("PartOwner") do
+                                    if StruggleEvent then StruggleEvent:FireServer(Player) end
+                                    if CE and CE:FindFirstChild("RagdollRemote") then
+                                        CE.RagdollRemote:FireServer(hrp, 0)
+                                    end
+                                    task.wait()
+                                end
+                            end)
+                            hrp.Anchored = true
+                            task.wait(0.3)
+                            hrp.Anchored = false
+                        end)
+                    end
+                end)
+            end
+            
+            ApplyAntiGrab(Player.Character)
+            
+            AntiGrabCons["respawn"] = Player.CharacterAdded:Connect(function(newChar)
+                task.wait(1)
+                if AntiGrab then ApplyAntiGrab(newChar) end
+            end)
+        end
+    end
+})
+
+-- ② アンチブロブ
+local antiblob = false
+
+DefenseMain:AddToggle("AntiBlobToggle", {
+    Text = "アンチブロブ",
+    Default = false,
+    Callback = function(Value)
+        antiblob = Value
+        
+        if Value then
+            local char = Player.Character
+            if char and not char:FindFirstChild("TruePositionPart") then
+                local tpp = Instance.new("Part")
+                tpp.Name = "TruePositionPart"
+                tpp.Anchored = true
+                tpp.Transparency = 0.8
+                tpp.CanCollide = false
+                tpp.Size = Vector3.new(0.1, 0.1, 0.1)
+                tpp.CFrame = CFrame.new(0, -10000000, 0)
+                tpp.Parent = char
+            end
+            
+            task.spawn(function()
+                while antiblob do
+                    local char = Player.Character
+                    if char then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        local tpp = char:FindFirstChild("TruePositionPart")
+                        
+                        if hrp and tpp then
+                            local rootAtt = hrp:FindFirstChild("RootAttachment")
+                            if rootAtt and rootAtt.Parent == hrp then
+                                rootAtt.Parent = tpp
+                            end
+                            
+                            local isGrabbed = false
+                            for _, part in pairs(char:GetChildren()) do
+                                if part:IsA("Part") and part.Massless then
+                                    part.Massless = false
+                                    isGrabbed = true
+                                end
+                            end
+                            
+                            if isGrabbed then
+                                hrp.AssemblyLinearVelocity = Vector3.new(0, 15000000, 0)
+                                
+                                local function fireDrop(item)
+                                    local script = item:FindFirstChild("BlobmanSeatAndOwnerScript")
+                                    local rDet = item:FindFirstChild("RightDetector")
+                                    local lDet = item:FindFirstChild("LeftDetector")
+                                    
+                                    if script and rDet and lDet then
+                                        local drop = script:FindFirstChild("CreatureDrop")
+                                        local rWeld = rDet:FindFirstChild("RightWeld")
+                                        local lWeld = lDet:FindFirstChild("LeftWeld")
+                                        
+                                        if drop then
+                                            if rWeld then drop:FireServer(rWeld, hrp) end
+                                            if lWeld then drop:FireServer(lWeld, hrp) end
+                                        end
+                                        
+                                        if StruggleEvent then StruggleEvent:FireServer(Player) end
+                                    end
+                                end
+                                
+                                local plotItems = workspace:FindFirstChild("PlotItems")
+                                if plotItems then
+                                    for _, plot in pairs(plotItems:GetChildren()) do
+                                        if plot.Name ~= "PlayersInPlots" then
+                                            for _, item in pairs(plot:GetChildren()) do
+                                                if item.Name == "CreatureBlobman" then
+                                                    fireDrop(item)
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                                
+                                for _, plr in pairs(Players:GetPlayers()) do
+                                    local folder = workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+                                    if folder then
+                                        for _, item in pairs(folder:GetChildren()) do
+                                            if item.Name == "CreatureBlobman" then
+                                                fireDrop(item)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        else
+            local char = Player.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local tpp = char:FindFirstChild("TruePositionPart")
+                if hrp and tpp then
+                    local rootAtt = tpp:FindFirstChild("RootAttachment")
+                    if rootAtt then rootAtt.Parent = hrp end
+                    tpp:Destroy()
+                end
+            end
+        end
+    end
+})
+
+-- ③ アンチブロブマンオーラ
+local auraConnection = nil
+
+DefenseExtra:AddToggle("AntiBlobmanAuraToggle", {
+    Text = "アンチブロブマンオーラ",
+    Default = false,
+    Callback = function(enabled)
+        if auraConnection then auraConnection:Disconnect() auraConnection = nil end
+        
+        if enabled then
+            auraConnection = RunService.Heartbeat:Connect(function()
+                local myChar = Player.Character
+                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                if not myRoot then return end
+                
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= Player then
+                        local pChar = plr.Character
+                        local pRoot = pChar and pChar:FindFirstChild("HumanoidRootPart")
+                        local pHum = pChar and pChar:FindFirstChild("Humanoid")
+                        
+                        if pRoot and pHum and pHum.SeatPart then
+                            local seatParent = pHum.SeatPart.Parent
+                            if seatParent and seatParent.Name == "CreatureBlobman" then
+                                if (pRoot.Position - myRoot.Position).Magnitude <= 19 then
+                                    if GE and GE:FindFirstChild("SetNetworkOwner") then
+                                        GE.SetNetworkOwner:FireServer(pRoot, pRoot.CFrame)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- ④ アンチグッチ
+local gucciRunId = 0
+
+local function FWC(parent, name, time)
+    return parent:FindFirstChild(name) or parent:WaitForChild(name, time or 3)
+end
+
+local function spawnGucciToy(name, cframe, vector)
+    local MenuToys = ReplicatedStorage:FindFirstChild("MenuToys")
+    if not MenuToys then return false end
+    local ToySpawn = MenuToys:FindFirstChild("SpawnToyRemoteFunction")
+    if not ToySpawn then return false end
+    
+    local inv = workspace:FindFirstChild(Player.Name .. "SpawnedInToys")
+    if not inv then return false end
+    
+    task.spawn(function()
+        pcall(function() ToySpawn:InvokeServer(name, cframe, vector or Vector3.new()) end)
+    end)
+    
+    local toy
+    local conn = inv.ChildAdded:Connect(function(c)
+        if c.Name == name and c:IsA("Model") then toy = c end
+    end)
+    
+    local t = tick()
+    while not toy and tick() - t < 2 do task.wait(0.01) end
+    if conn then conn:Disconnect() end
+    return toy
+end
+
+local function GucciAntiGrab()
+    gucciRunId = gucciRunId + 1
+    local myId = gucciRunId
+    
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local hum = FWC(char, "Humanoid")
+    if not hum then return end
+    
+    hum.Sit = true
+    task.wait(0.02)
+    hum.Sit = false
+    task.wait(0.02)
+    
+    task.spawn(function()
+        local t = tick()
+        while tick() - t < 0.8 do
+            for _, v in pairs(char:GetChildren()) do
+                if v:IsA("BasePart") then v.Velocity = Vector3.new() end
+            end
+            task.wait(0.01)
+        end
+    end)
+    
+    local autoGucciT, sitJumpT, Blob, BHead = true, false, nil, nil
+    
+    local hrp = FWC(char, "HumanoidRootPart")
+    Blob = spawnGucciToy("CreatureBlobman", hrp.CFrame * CFrame.new(0, 0, -5), Vector3.new(0, -15.716, 0))
+    
+    if not Blob then return end
+    local Seat = FWC(Blob, "VehicleSeat")
+    
+    task.defer(function()
+        local startT = tick()
+        while autoGucciT and myId == gucciRunId and tick() - startT < 0.3 do
+            if Blob and Blob.Parent then
+                if Seat and Seat.Parent and Seat.Occupant ~= hum then
+                    Seat:Sit(hum)
+                end
+            end
+            task.wait(0.03)
+            if char and hum and hum.Parent then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+            task.wait(0.03)
+        end
+        autoGucciT = false
+        sitJumpT = false
+    end)
+    
+    sitJumpT = true
+    
+    task.defer(function()
+        while sitJumpT and myId == gucciRunId do
+            if char and hrp and hrp.Parent and CE and CE:FindFirstChild("RagdollRemote") then
+                CE.RagdollRemote:FireServer(hrp, 0.095)
+            end
+            task.wait(0.01)
+        end
+    end)
+    
+    task.wait(0.4)
+    if myId ~= gucciRunId then return end
+    
+    hum.Sit = false
+    Blob.Name = "Gucci"
+    
+    for _, v in pairs(Blob:GetChildren()) do
+        if v:IsA("BasePart") then
+            v.CanCollide = false
+            v.CanTouch = false
+            v.CanQuery = false
+        end
+    end
+    
+    BHead = FWC(Blob, "Head")
+    task.defer(function()
+        while myId == gucciRunId and Blob and BHead do
+            BHead.CFrame = CFrame.new(BHead.Position.X, 1e5, BHead.Position.Z)
+            task.wait(0.01)
+        end
+    end)
+end
+
+DefenseExtra:AddButton({
+    Text = "🧤 アンチグッチ実行",
+    Func = function()
+        GucciAntiGrab()
+        OrionLib:MakeNotification({Name = "アンチグッチ", Content = "実行しました", Time = 3})
+    end
+})
 local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 local Camera = workspace.CurrentCamera
