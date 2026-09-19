@@ -3014,7 +3014,7 @@ if tHum and tHum.Health <= 0 then
             Time = 2
         })
     end
-    continue
+
 end
                 
                 if tRoot and tHum and tHum.Health > 0 then
