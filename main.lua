@@ -3165,7 +3165,138 @@ local TriggerTab = Window:MakeTab({
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
+-- ==========================================
+-- ディフェンスタブ
+-- ==========================================
+local DefenseTab = Window:MakeTab({
+    Name = "ディフェンス",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
+local CE = ReplicatedStorage:FindFirstChild("CharacterEvents")
+local StruggleEvent = CE and CE:FindFirstChild("Struggle")
+local BeingHeld = Player:WaitForChild("IsHeld", 10)
+
+-- アンチグラブ
+local AntiGrab = false
+local AntiGrabProc = false
+local AGWalk = false
+local AGCons = {}
+
+local function AGDiscAll()
+    for k, v in pairs(AGCons) do
+        if v then v:Disconnect() end
+    end
+    table.clear(AGCons)
+end
+
+local function ApplyAntiGrab(char)
+    if not char or not AntiGrab then return end
+    
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    local hum = char:WaitForChild("Humanoid", 5)
+    local head = char:WaitForChild("Head", 5)
+    if not (hrp and hum and head) then return end
+
+    for _, v in pairs(char:GetChildren()) do
+        if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+            v.BallSocketConstraint.Enabled = false
+            if v:FindFirstChild("RagdollLimbPart") then
+                v.RagdollLimbPart.WeldConstraint.Enabled = false
+            end
+        end
+    end
+
+    AGCons["AGHead"] = head.ChildAdded:Connect(function(PartOwner)
+        if PartOwner.Name == "PartOwner" then
+            if not AntiGrabProc then
+                AntiGrabProc = true
+                hum.Sit = false
+                if StruggleEvent then StruggleEvent:FireServer(Player) end
+                
+                task.spawn(function() 
+                    while (head and head:FindFirstChild("PartOwner")) or (BeingHeld and BeingHeld.Value) do
+                        if StruggleEvent then StruggleEvent:FireServer(Player) end
+                        if CE and CE:FindFirstChild("RagdollRemote") then
+                            CE.RagdollRemote:FireServer(hrp, 0)
+                        end
+                        task.wait()
+                    end
+                end)
+                
+                hrp.Anchored = true
+                if not AGWalk then
+                    AGWalk = true
+                    while BeingHeld and BeingHeld.Value and task.wait() do
+                        hrp.CFrame = hrp.CFrame + hum.MoveDirection * 0.43
+                    end
+                end
+                hrp.Anchored = false
+                AntiGrabProc = false
+                AGWalk = false
+            end
+        end
+    end)
+    
+    local ragdolled = hum:WaitForChild("Ragdolled", 5)
+    if ragdolled then
+        AGCons["AGRagdoll"] = ragdolled.Changed:Connect(function()
+            if hum.Ragdolled.Value then
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                        v.BallSocketConstraint.Enabled = false
+                        if v:FindFirstChild("RagdollLimbPart") then
+                            v.RagdollLimbPart.WeldConstraint.Enabled = false
+                        end
+                    end
+                end
+            end
+        end)
+    end
+    
+    local weldHRP = hrp:WaitForChild("WeldHRP", 5)
+    if weldHRP then
+        AGCons["AGWeld"] = weldHRP.Changed:Connect(function()
+            if hrp.WeldHRP.Enabled then
+                while not hum.Sit do task.wait() end
+                hum.Sit = false
+                hum.AutoRotate = true
+                hum.HipHeight = 1
+                while hrp.WeldHRP.Enabled and task.wait() do
+                    head.CFrame = hrp.CFrame + Vector3.new(0, 1.35, 0)
+                end
+                hum.HipHeight = 0
+            end
+        end)
+    end
+end
+
+DefenseTab:AddToggle({
+    Name = "アンチグラブ",
+    Default = false,
+    Callback = function(Value)
+        AntiGrab = Value
+        AGDiscAll()
+        
+        if AntiGrab then
+            ApplyAntiGrab(Player.Character)
+            AGCons["AGChar"] = Player.CharacterAdded:Connect(ApplyAntiGrab)
+        else
+            local char = Player.Character
+            if char then
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                        v.BallSocketConstraint.Enabled = false
+                        if v:FindFirstChild("RagdollLimbPart") then
+                            v.RagdollLimbPart.WeldConstraint.Enabled = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
 local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 local Camera = workspace.CurrentCamera
