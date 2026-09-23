@@ -2365,7 +2365,7 @@ local function startLineLag()
 local directions = {}
                 local radius = 5
                 local height = 20
-                local points = 16
+                local points = 100
                 for i = 1, points do
                     local angle = (i / points) * math.pi * 2
                     local x = math.cos(angle) * radius
