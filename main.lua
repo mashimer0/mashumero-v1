@@ -4479,7 +4479,7 @@ LagKickGroup:AddButton({
                 spamOwnership(data.hrp)
                 task.wait()
             end
-            local radius = 10
+            local radius = 5
             local angleStep = (math.pi * 2) / #playerData
             for idx, data in ipairs(playerData) do
                 local angle = (idx - 1) * angleStep
