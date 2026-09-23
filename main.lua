@@ -2362,56 +2362,16 @@ local function startLineLag()
             if spawnLocation then
                 local randomX = math.random(-1e9,1e9)
                 local randomZ = math.random(-1e9,1e9)
-local directions = {
-    CFrame.new(randomX, 0, randomZ),
-    CFrame.new(-randomX, 0, -randomZ),
-    CFrame.new(randomX, 0, -randomZ),
-    CFrame.new(-randomX, 0, randomZ),
-    CFrame.new(randomX * 2, 0, randomZ * 2),
-    CFrame.new(-randomX * 2, 0, -randomZ * 2),
-    CFrame.new(randomX * 2, 0, -randomZ * 2),
-    CFrame.new(-randomX * 2, 0, randomZ * 2),
-    CFrame.new(randomX * 3, 0, randomZ * 3),
-    CFrame.new(-randomX * 3, 0, -randomZ * 3),
-    CFrame.new(randomX * 3, 0, -randomZ * 3),
-    CFrame.new(-randomX * 3, 0, randomZ * 3),
-    CFrame.new(randomX * 4, 0, randomZ * 4),
-    CFrame.new(-randomX * 4, 0, -randomZ * 4),
-    CFrame.new(randomX * 4, 0, -randomZ * 4),
-    CFrame.new(-randomX * 4, 0, randomZ * 4),
-    CFrame.new(randomX * 5, 0, randomZ * 5),
-    CFrame.new(-randomX * 5, 0, -randomZ * 5),
-    CFrame.new(randomX * 5, 0, -randomZ * 5),
-    CFrame.new(-randomX * 5, 0, randomZ * 5),
-    CFrame.new(randomX * 6, 0, randomZ * 6),
-    CFrame.new(-randomX * 6, 0, -randomZ * 6),
-    CFrame.new(randomX * 6, 0, -randomZ * 6),
-    CFrame.new(-randomX * 6, 0, randomZ * 6),
-    CFrame.new(randomX * 7, 0, randomZ * 7),
-    CFrame.new(-randomX * 7, 0, -randomZ * 7),
-    CFrame.new(randomX * 7, 0, -randomZ * 7),
-    CFrame.new(-randomX * 7, 0, randomZ * 7),
-    CFrame.new(randomX * 8, 0, randomZ * 8),
-    CFrame.new(-randomX * 8, 0, -randomZ * 8),
-    CFrame.new(randomX * 8, 0, -randomZ * 8),
-    CFrame.new(-randomX * 8, 0, randomZ * 8),
-    CFrame.new(randomX * 9, 0, randomZ * 9),
-    CFrame.new(-randomX * 9, 0, -randomZ * 9),
-    CFrame.new(randomX * 9, 0, -randomZ * 9),
-    CFrame.new(-randomX * 9, 0, randomZ * 9),
-    CFrame.new(randomX * 10, 0, randomZ * 10),
-    CFrame.new(-randomX * 10, 0, -randomZ * 10),
-    CFrame.new(randomX * 10, 0, -randomZ * 10),
-    CFrame.new(-randomX * 10, 0, randomZ * 10),
-    CFrame.new(randomX * 11, 0, randomZ * 11),
-    CFrame.new(-randomX * 11, 0, -randomZ * 11),
-    CFrame.new(randomX * 11, 0, -randomZ * 11),
-    CFrame.new(-randomX * 11, 0, randomZ * 11),
-    CFrame.new(randomX * 12, 0, randomZ * 12),
-    CFrame.new(-randomX * 12, 0, -randomZ * 12),
-    CFrame.new(randomX * 12, 0, -randomZ * 12),
-    CFrame.new(-randomX * 12, 0, randomZ * 12)
-}
+local directions = {}
+                local radius = 15
+                local height = 20
+                local points = 16
+                for i = 1, points do
+                    local angle = (i / points) * math.pi * 2
+                    local x = math.cos(angle) * radius
+                    local z = math.sin(angle) * radius
+                    table.insert(directions, CFrame.new(x, height, z))
+                end
                 for _, pos in pairs(directions) do
                     pcall(function() createLine:FireServer(spawnLocation, pos) end)
                 end
