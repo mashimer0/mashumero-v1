@@ -2363,7 +2363,7 @@ local function startLineLag()
                 local randomX = math.random(-1e9,1e9)
                 local randomZ = math.random(-1e9,1e9)
 local directions = {}
-                local radius = 15
+                local radius = 5
                 local height = 20
                 local points = 16
                 for i = 1, points do
