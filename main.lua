@@ -3131,7 +3131,169 @@ local TriggerTab = Window:MakeTab({
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
+-- ==========================================
+-- グラブキック タブ
+-- ==========================================
+local GrabKickTab = Window:MakeTab({
+    Name = "グラブキック",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
+local _GK_Players = game:GetService("Players")
+local _GK_RS = game:GetService("ReplicatedStorage")
+local _GK_RunService = game:GetService("RunService")
+local _GK_Workspace = game:GetService("Workspace")
+local _GK_LocalPlayer = _GK_Players.LocalPlayer
+local _GK_GrabEvents = _GK_RS:WaitForChild("GrabEvents")
+local _GK_SpawnToy = _GK_RS:WaitForChild("MenuToys"):WaitForChild("SpawnToyRemoteFunction")
+local _GK_SetNetworkOwner = _GK_GrabEvents:WaitForChild("SetNetworkOwner")
+local _GK_CreateLine = _GK_GrabEvents:FindFirstChild("CreateGrabLine")
+
+local _GK_Enabled = false
+local _GK_TargetName = ""
+local _GK_LagRunning = false
+
+local function _GK_GetPlayerList()
+    local list = {}
+    for _, plr in ipairs(_GK_Players:GetPlayers()) do
+        if plr ~= _GK_LocalPlayer then
+            table.insert(list, plr.DisplayName .. " (@" .. plr.Name .. ")")
+        end
+    end
+    return list
+end
+
+local function _GK_GetPlayer(display)
+    for _, plr in ipairs(_GK_Players:GetPlayers()) do
+        if (plr.DisplayName .. " (@" .. plr.Name .. ")") == display then
+            return plr
+        end
+    end
+    return nil
+end
+
+local function _GK_TeleportToPlayer(target, myHrp)
+    if not target.Character then return end
+    local tHrp = target.Character:FindFirstChild("HumanoidRootPart")
+    if not tHrp or not myHrp then return end
+    local saved = myHrp.CFrame
+    myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 2)
+    for i = 1, 15 do
+        _GK_SetNetworkOwner:FireServer(tHrp, tHrp.CFrame)
+        task.wait()
+    end
+    myHrp.CFrame = saved
+end
+
+local function _GK_StartLag()
+    if _GK_LagRunning then return end
+    if not _GK_CreateLine then return end
+    _GK_LagRunning = true
+    task.spawn(function()
+        while _GK_LagRunning do
+            local spawn = _GK_Workspace:FindFirstChild("SpawnLocation")
+                or _GK_Workspace:FindFirstChild("Spawn")
+                or (_GK_LocalPlayer.Character and _GK_LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
+            if spawn then
+                _GK_CreateLine:FireServer(spawn, CFrame.new(math.random(-2e9, 2e9), 0, math.random(-2e9, 2e9)))
+            end
+            task.wait()
+        end
+    end)
+end
+
+local function _GK_StopLag()
+    _GK_LagRunning = false
+end
+
+local _GK_Dropdown = GrabKickTab:AddDropdown({
+    Name = "ターゲット選択",
+    Default = "",
+    Options = _GK_GetPlayerList(),
+    Callback = function(Value)
+        _GK_TargetName = Value
+    end
+})
+
+GrabKickTab:AddButton({
+    Name = "🔄 リスト更新",
+    Callback = function()
+        _GK_Dropdown:Refresh(_GK_GetPlayerList())
+    end
+})
+
+GrabKickTab:AddToggle({
+    Name = "Grab Kick (BETA)",
+    Default = false,
+    Callback = function(Value)
+        _GK_Enabled = Value
+        
+        if Value then
+            _GK_StartLag()
+        else
+            _GK_StopLag()
+        end
+        
+        if _GK_Enabled then
+            task.spawn(function()
+                while _GK_Enabled do
+                    local target = _GK_GetPlayer(_GK_TargetName)
+                    local myChar = _GK_LocalPlayer.Character
+                    local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    
+                    if target and myHrp then
+                        local tChar = target.Character
+                        local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
+                        
+                        if tHrp then
+                            local dist = (myHrp.Position - tHrp.Position).Magnitude
+                            if dist > 25 then
+                                _GK_TeleportToPlayer(target, myHrp)
+                            end
+                            
+                            _GK_SetNetworkOwner:FireServer(tHrp, tHrp.CFrame)
+                            if _GK_GrabEvents:FindFirstChild("DestroyGrabLine") then
+                                _GK_GrabEvents.DestroyGrabLine:FireServer(tHrp)
+                            end
+                            
+                            tHrp.AssemblyLinearVelocity = Vector3.zero
+                            tHrp.AssemblyAngularVelocity = Vector3.zero
+                            
+                            local bp = tHrp:FindFirstChild("ControlBP")
+                            if not bp then
+                                bp = Instance.new("BodyPosition")
+                                bp.Name = "ControlBP"
+                                bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                bp.P = 800000
+                                bp.Parent = tHrp
+                            end
+                            bp.Position = myHrp.Position + Vector3.new(5, 10, 5)
+                        end
+                    end
+                    task.wait()
+                end
+                
+                local target = _GK_GetPlayer(_GK_TargetName)
+                if target and target.Character then
+                    local tHrp = target.Character:FindFirstChild("HumanoidRootPart")
+                    if tHrp and tHrp:FindFirstChild("ControlBP") then
+                        tHrp.ControlBP:Destroy()
+                    end
+                end
+            end)
+        end
+    end
+})
+
+_GK_Players.PlayerAdded:Connect(function()
+    task.wait(0.5)
+    _GK_Dropdown:Refresh(_GK_GetPlayerList())
+end)
+_GK_Players.PlayerRemoving:Connect(function()
+    task.wait(0.3)
+    _GK_Dropdown:Refresh(_GK_GetPlayerList())
+end)
 local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 local Camera = workspace.CurrentCamera
