@@ -2984,35 +2984,7 @@ end
                     tRoot.RotVelocity = Vector3.zero
                     tRoot.AssemblyLinearVelocity = Vector3.zero
                     tRoot.AssemblyAngularVelocity = Vector3.zero
-                    -- ★ アンチキック対策（旧れもにーHUB対応） ★
-                    local targetPlayer = Players:FindFirstChild(targetName)
-                    if targetPlayer then
-                        local spawned = workspace:FindFirstChild(targetPlayer.Name .. "SpawnedInToys")
-                        if spawned then
-                            for _, toy in pairs(spawned:GetChildren()) do
-                                if toy.Name == "AntiKick" or toy.Name == "NinjaShuriken" or toy.Name == "NinjaKunai" then
-                                    local soundPart = toy:FindFirstChild("SoundPart")
-                                    if soundPart then
-                                        -- NetworkOwnerを奪う
-                                        pcall(function()
-                                            GE.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
-                                        end)
-                                        -- 所有権を奪えたら、上空に飛ばす
-                                        if soundPart:FindFirstChild("PartOwner") and soundPart.PartOwner.Value == LocalPlayer.Name then
-                                            soundPart.CFrame = CFrame.new(0, 1000, 0)
-                                        end
-                                    end
-                                    -- StickyPartも確認
-                                    local stickyPart = toy:FindFirstChild("StickyPart")
-                                    if stickyPart then
-                                        pcall(function()
-                                            GE.SetNetworkOwner:FireServer(stickyPart, stickyPart.CFrame)
-                                        end)
-                                    end
-                                end
-                            end
-                        end
-                    end
+                    
                     local orbitCFrame = lockPos * CFrame.new(orbitX, 0, orbitZ)
                     local lookAtCFrame = CFrame.lookAt(orbitCFrame.Position, lockPos.Position)
                     blobRoot.CFrame = lookAtCFrame
