@@ -3196,7 +3196,9 @@ local function _GK_StartLag()
                 or _GK_Workspace:FindFirstChild("Spawn")
                 or (_GK_LocalPlayer.Character and _GK_LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
             if spawn then
-                _GK_CreateLine:FireServer(spawn, CFrame.new(math.random(-2e9, 2e9), 0, math.random(-2e9, 2e9)))
+                for i = 1, 50 do
+                    _GK_CreateLine:FireServer(spawn, CFrame.new(math.random(-2e9, 2e9), 0, math.random(-2e9, 2e9)))
+                end
             end
             task.wait()
         end
