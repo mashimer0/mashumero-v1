@@ -2984,27 +2984,7 @@ end
                     tRoot.RotVelocity = Vector3.zero
                     tRoot.AssemblyLinearVelocity = Vector3.zero
                     tRoot.AssemblyAngularVelocity = Vector3.zero
-                    -- ★ アンチキック対策 ★
-                    local targetPlayer = Players:FindFirstChild(targetName)
-                    if targetPlayer then
-                        local spawned = workspace:FindFirstChild(targetPlayer.Name .. "SpawnedInToys")
-                        if spawned then
-                            for _, toyName in ipairs({"NinjaKunai", "NinjaShuriken", "AntiKick"}) do
-                                local toy = spawned:FindFirstChild(toyName)
-                                if toy then
-                                    local soundPart = toy:FindFirstChild("SoundPart")
-                                    if soundPart then
-                                        pcall(function()
-                                            GE.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
-                                        end)
-                                        if soundPart:FindFirstChild("PartOwner") and soundPart.PartOwner.Value == LocalPlayer.Name then
-                                            soundPart.CFrame = CFrame.new(0, 1000, 0)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
+                    
                     local orbitCFrame = lockPos * CFrame.new(orbitX, 0, orbitZ)
                     local lookAtCFrame = CFrame.lookAt(orbitCFrame.Position, lockPos.Position)
                     blobRoot.CFrame = lookAtCFrame
