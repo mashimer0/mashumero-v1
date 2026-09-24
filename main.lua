@@ -2982,17 +2982,13 @@ end
                     tRoot.CFrame = lockPos
                     tRoot.Velocity = Vector3.zero
                     tRoot.RotVelocity = Vector3.zero
-                    tRoot.AssemblyLinearVelocity = Vector3.zero
-                    tRoot.AssemblyAngularVelocity = Vector3.zero
+                    
                     
                     local orbitCFrame = lockPos * CFrame.new(orbitX, 0, orbitZ)
                     local lookAtCFrame = CFrame.lookAt(orbitCFrame.Position, lockPos.Position)
                     blobRoot.CFrame = lookAtCFrame
                     blobRoot.Velocity = Vector3.zero
-                    tRoot.CFrame = lockPos
-                    task.wait()
-                    tRoot.CFrame = lockPos
-                    task.wait()
+                    
                     tRoot.CFrame = lockPos
                     if tick() - packetTimer > 0.01 then  -- ★★★ 爆速！ 0.00005 ★★★
                         packetTimer = tick()
